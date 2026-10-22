@@ -1,0 +1,127 @@
+    ("Security log deletion", "A coworker suggests deleting logs to free disk space during an investigation.", ["Preserve relevant logs and use approved storage procedures", "Delete all logs", "Disable logging permanently", "Share logs publicly"], 0, "Logs may be critical evidence and should be preserved appropriately."),
+]
+
+def get_number(message, lowest, highest):
+    while True:
+        answer = input(message).strip()
+        if answer.isdigit():
+            number = int(answer)
+            if lowest <= number <= highest:
+                return number
+        print(f"Please enter a number from {lowest} to {highest}.")
+
+
+def choose_difficulty():
+    print("\nChoose a difficulty:")
+    print("1. Easy - More room for mistakes")
+    print("2. Normal - Balanced challenge")
+    print("3. Hard - Mistakes have bigger consequences")
+    choice = get_number("Difficulty (1-3): ", 1, 3)
+    if choice == 1:
+        return "Easy", 5
+    if choice == 2:
+        return "Normal", 10
+    return "Hard", 15
+
+
+def show_status(health, budget, score, round_number):
+    print("\n" + "-" * 45)
+    print(f"Round: {round_number}/{ROUNDS} | Correct: {score}")
+    print(f"Company security: {max(health, 0)}/100")
+    print(f"IT budget: ${max(budget, 0)}k")
+    print("-" * 45)
+
+
+def ask_incident(event, round_number):
+    title, situation, answers, correct, explanation = event
+    print(f"\nINCIDENT {round_number}: {title.upper()}")
+    print(situation)
+
+    # Shuffle answer positions so there is no predictable correct number.
+    choices = list(enumerate(answers))
+    random.shuffle(choices)
+    for number, (_, answer) in enumerate(choices, 1):
+        print(f"{number}. {answer}")
+
+    selection = get_number("What do you do? (1-4): ", 1, 4)
+    original_answer = choices[selection - 1][0]
+    correct_answer = original_answer == correct
+
+    if correct_answer:
+        print("\nGood decision! Your response helped the company.")
+    else:
+        print("\nThat response puts the company at risk.")
+        print("Best response:", answers[correct])
+    print("Why:", explanation)
+    return correct_answer
+
+
+def final_report(score, health, budget, difficulty):
+    print("\n" + "=" * 45)
+    print("FINAL SECURITY REPORT")
+    print("=" * 45)
+    print("Difficulty:", difficulty)
+    print(f"Correct decisions: {score}/{ROUNDS}")
+    print(f"Accuracy: {score / ROUNDS * 100:.0f}%")
+    print(f"Final company security: {max(health, 0)}/100")
+    print(f"Remaining IT budget: ${max(budget, 0)}k")
+
+    if health <= 0:
+        print("Result: Critical failure. The company needs recovery.")
+    elif score == ROUNDS:
+        print("Result: Outstanding! You handled every incident.")
+    elif score >= 5:
+        print("Result: Good work. The company is in decent shape.")
+    else:
+        print("Result: More training is needed to reduce risk.")
+
+    print("\nSkills practiced: incident response, access control,")
+    print("phishing awareness, monitoring, and risk management.")
+
+
+def play_game():
+    difficulty, penalty = choose_difficulty()
+    health = STARTING_HEALTH
+    budget = STARTING_BUDGET
+    score = 0
+    incidents = random.sample(events, ROUNDS)
+
+    print("\nYou have joined a company's cybersecurity team.")
+    print("Your job is to respond to incidents and protect its systems.")
+    print("Correct decisions improve security. Mistakes cost resources.")
+
+    for round_number, event in enumerate(incidents, 1):
+        show_status(health, budget, score, round_number)
+        correct = ask_incident(event, round_number)
+
+        if correct:
+            score += 1
+            health = min(100, health + 3)
+            budget = min(100, budget + 2)
+            print("Security +3 | Budget +$2k")
+        else:
+            health -= penalty
+            budget -= 8
+            print(f"Security -{penalty} | Budget -$8k")
+
+        if health <= 0 or budget <= 0:
+            print("\nThe company has run out of resources.")
+            break
+
+    final_report(score, health, budget, difficulty)
+
+
+def main():
+    print("=" * 45)
+    print("        CYBER DEFENSE SIMULATOR")
+    print("=" * 45)
+    print("Make smart security decisions to save your company!")
+
+    while True:
+        play_game()
+        print("\n1. Play again")
+        print("2. Quit")
+        choice = get_number("Choose (1-2): ", 1, 2)
+        if choice == 2:
+            print("Thanks for playing!")
+            break
